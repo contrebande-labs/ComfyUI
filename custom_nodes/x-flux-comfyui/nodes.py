@@ -1,6 +1,5 @@
 import os
 import comfy.model_management as mm
-import comfy.model_patcher as mp
 from comfy.utils import ProgressBar
 import copy
 
@@ -9,38 +8,17 @@ import torch
 #from .xflux.src.flux.modules.layers import DoubleStreamBlockLoraProcessor, DoubleStreamBlockProcessor
 #from .xflux.src.flux.model import Flux as ModFlux
 
-from .xflux.src.flux.util import (configs, load_ae, load_clip,
-                            load_flow_model, load_t5, load_safetensors, load_from_repo_id,
-                            load_controlnet, Annotator)
+from .xflux.src.flux.util import (load_safetensors, load_controlnet)
 
 
 from .utils import (FluxUpdateModules, attn_processors, set_attn_processor, 
-                is_model_pathched, merge_loras, tensor_to_pil, LATENT_PROCESSOR_COMFY,
+                is_model_pathched, merge_loras, LATENT_PROCESSOR_COMFY,
                 comfy_to_xlabs_lora, check_is_comfy_lora)
 from .layers import DoubleStreamBlockLoraProcessor, DoubleStreamBlockProcessor, DoubleStreamBlockLorasMixerProcessor
-from .xflux.src.flux.model import Flux as ModFlux
-#from .model_init import double_blocks_init, single_blocks_init
+
+from comfy.utils import get_attr
 
 
-from comfy.utils import get_attr, set_attr
-
-
-dir_xlabs = os.path.join(folder_paths.models_dir, "xlabs")
-os.makedirs(dir_xlabs, exist_ok=True)
-dir_xlabs_loras = os.path.join(dir_xlabs, "loras")
-os.makedirs(dir_xlabs_loras, exist_ok=True)
-dir_xlabs_controlnets = os.path.join(dir_xlabs, "controlnets")
-os.makedirs(dir_xlabs_controlnets, exist_ok=True)
-dir_xlabs_flux = os.path.join(dir_xlabs, "flux")
-os.makedirs(dir_xlabs_flux, exist_ok=True)
-
-
-
-folder_paths.folder_names_and_paths["xlabs"] = ([dir_xlabs], folder_paths.supported_pt_extensions)
-folder_paths.folder_names_and_paths["xlabs_loras"] = ([dir_xlabs_loras], folder_paths.supported_pt_extensions)
-folder_paths.folder_names_and_paths["xlabs_controlnets"] = ([dir_xlabs_controlnets], folder_paths.supported_pt_extensions)
-folder_paths.folder_names_and_paths["xlabs_flux"] = ([dir_xlabs_flux], folder_paths.supported_pt_extensions)
-folder_paths.folder_names_and_paths["xlabs_flux_json"] = ([dir_xlabs_flux], set({'.json',}))
 
 
 
@@ -62,6 +40,7 @@ def load_flux_lora(path):
         return checkpoint, int(a1)
     return checkpoint, 16
 
+
 def cleanprint(a):
     print(a)
     return a
@@ -75,7 +54,7 @@ class LoadFluxLora:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": { "model": ("MODEL",),
-                              "lora_name": (cleanprint(folder_paths.get_filename_list("xlabs_loras")), ),
+                              "lora_name": (cleanprint(folder_paths.get_filename_list("loras")), ),
                               "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
                               }}
 
@@ -89,7 +68,6 @@ class LoadFluxLora:
      
         pbar = ProgressBar(5)
         device=mm.get_torch_device()
-        offload_device=mm.unet_offload_device()
         
         is_patched = is_model_pathched(model.model)
         
@@ -107,7 +85,7 @@ class LoadFluxLora:
         
         pbar.update(1)
         bi.model.to(device)
-        checkpoint, lora_rank = load_flux_lora(os.path.join(dir_xlabs_loras, lora_name))
+        checkpoint, lora_rank = load_flux_lora(folder_paths.get_full_path("loras", lora_name))
         pbar.update(1)
         if not is_patched:
             patches=FluxUpdateModules(tyanochky)
@@ -198,7 +176,7 @@ class LoadFluxControlNet:
         device=mm.get_torch_device()
 
         controlnet = load_controlnet(model_name, device)
-        checkpoint = load_checkpoint_controlnet(os.path.join(dir_xlabs_controlnets, controlnet_path))
+        checkpoint = load_checkpoint_controlnet(folder_paths.get_full_path("controlnet", controlnet_path))
         if checkpoint is not None:
             controlnet.load_state_dict(checkpoint)
             control_type = "canny"
