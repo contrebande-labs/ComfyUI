@@ -186,7 +186,7 @@ class LoadFluxControlNet:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {"model_name": (["flux-dev", "flux-dev-fp8", "flux-schnell"],),
-                              "controlnet_path": (folder_paths.get_filename_list("xlabs_controlnets"), ),
+                              "controlnet_path": (folder_paths.get_filename_list("controlnet"), ),
                               }}
 
     RETURN_TYPES = ("FluxControlNet",)
