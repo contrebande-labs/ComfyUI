@@ -7,7 +7,7 @@ class GetImageSize:
             }
         }
 
-    RETURN_TYPES = ("INT", "INT", "INT",)
+    RETURN_TYPES = ("INT", "INT")
     RETURN_NAMES = ("width", "height")
     FUNCTION = "execute"
     CATEGORY = "essentials/image utils"
