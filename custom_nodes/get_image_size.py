@@ -15,3 +15,9 @@ class GetImageSize:
     def execute(self, image):
         return (image.shape[2], image.shape[1])
 
+NODE_CLASS_MAPPINGS = {
+    "Custom-GetImageSize": GetImageSize
+}
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "Custom-GetImageSize": "Get Image Size"
+}
